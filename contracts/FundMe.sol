@@ -4,8 +4,8 @@ pragma solidity >=0.7.0 <0.9.0;
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 contract FundMe {
-    // uint256 public minimumUsd = 5e18;
-    uint256 public minimumUsd = 5;
+    uint256 public minimumUsd = 5e18;
+    // uint256 public minimumUsd = 5;
     AggregatorV3Interface internal dataFeed;
 
     address[] public founders;
@@ -13,19 +13,25 @@ contract FundMe {
 
     constructor() {
         dataFeed = AggregatorV3Interface(
-            0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43
+            0x694AA1769357215DE4FAC081bf1f309aDC325306
         );
     }
 
     function fund() public payable {
-        require(msg.value >= minimumUsd, "Didn't send enoguh ETH");
+        require(getConversionRate(msg.value) >= minimumUsd, "Didn't send enoguh ETH");
         founders.push(msg.sender);
         founderToAmountFounded[msg.sender] =
             founderToAmountFounded[msg.sender] +
             msg.value;
     }
 
-    function getLatestData() public view returns (uint256) {
+    function getConversionRate (uint256 ethAmount) public view returns (uint256){
+        uint256 ethPrice = getPrice();
+        uint256 price = (ethAmount * ethPrice) / 1e18;
+        return price;
+    }
+
+    function getPrice() public view returns (uint256) {
         // prettier-ignore
         (
             /* uint80 roundID */,
@@ -39,5 +45,9 @@ contract FundMe {
 
     function getVersion() public view returns (uint256) {
         return dataFeed.version();
+    }
+
+    function getDecimal() public view returns (uint256) {
+        return  dataFeed.decimals();
     }
 }
